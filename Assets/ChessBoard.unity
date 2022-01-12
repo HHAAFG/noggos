@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0, g: 0.99999905, b: 0.99999905, a: 1}
+  m_IndirectSpecularColor: {r: 0.07924773, g: 0.07924773, b: 0.07924773, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -754,6 +754,9 @@ MonoBehaviour:
   attack: 6
   defence: 6
   attackRange: 0
+  avaiableSkills:
+  - Fire Ball
+  - 
 --- !u!137 &1170060419 stripped
 SkinnedMeshRenderer:
   m_CorrespondingSourceObject: {fileID: 13700000, guid: 089964c7cb0d1f74ebdb3a267fbc0763,
@@ -933,6 +936,17 @@ MonoBehaviour:
   selectedPiece: {fileID: 0}
   targetedPiece: {fileID: 0}
   charStatQueue: []
+  allSkills:
+  - skillName: Fire Ball
+    power: 5
+    cooldown: 2
+    skillRange: 15
+    skillIcon: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+  - skillName: 
+    power: 0
+    cooldown: 0
+    skillRange: 0
+    skillIcon: {fileID: 0}
 --- !u!4 &1348506812
 Transform:
   m_ObjectHideFlags: 0
@@ -1723,6 +1737,7 @@ MonoBehaviour:
   attack: 3
   defence: 5
   attackRange: 0
+  avaiableSkills: []
 --- !u!1 &1869641922
 GameObject:
   m_ObjectHideFlags: 0

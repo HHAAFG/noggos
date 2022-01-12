@@ -22,6 +22,7 @@ public class BattleManager : MonoBehaviour
 
     private int charIndex;
 
+public List<BaseSkill>allSkills = new List<BaseSkill>();
 
     // Start is called before the first frame update
     void Start()

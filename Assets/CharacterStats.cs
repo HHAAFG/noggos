@@ -12,6 +12,7 @@ public class CharacterStats : MonoBehaviour
     
     public float attackRange;
     bool canMove;
+    public List<string> avaiableSkills = new List<string>();
     // Start is called before the first frame update
     void Start()
     {
