@@ -12,12 +12,11 @@ public class CharacterStats : MonoBehaviour
     
     public float attackRange;
     bool canMove;
+    
+    bool isTargeted;
     public List<string> avaiableSkills = new List<string>();
     // Start is called before the first frame update
-    void Start()
-    {
-        canMove = true;
-    }
+
 
     // Update is called once per frame
     void Update()
@@ -40,8 +39,8 @@ public class CharacterStats : MonoBehaviour
     {
         if(curHp <= 0)
         {
-            //deadasShieet
-            canMove = false;
+      
+   
 
         }
 

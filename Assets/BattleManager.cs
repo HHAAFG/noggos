@@ -15,6 +15,8 @@ public class BattleManager : MonoBehaviour
     public List<Tuple<int, int>> availableMovements = new List<Tuple<int, int>>();
     public Piece selectedPiece;
 
+    public BaseSkill selectedSkill;
+
     public Piece targetedPiece;
     bool isSelected;
     private List<Piece> pieceLocations;
@@ -22,12 +24,17 @@ public class BattleManager : MonoBehaviour
 
     private int charIndex;
 
-public List<BaseSkill>allSkills = new List<BaseSkill>();
+    public List<BaseSkill> allSkills = new List<BaseSkill>();
 
+    RaycastHit hit;
+    Ray ray;
+
+    public GameObject skillButtonObject;
+    public Transform buttonTarget;
     // Start is called before the first frame update
     void Start()
     {
-        
+
         isSelected = false;
         _main = Camera.main;
         instance = this;
@@ -39,48 +46,56 @@ public List<BaseSkill>allSkills = new List<BaseSkill>();
     // Update is called once per frame
     void Update()
     {
- 
+
         if (isSelected)
         {
             MovePiece();
         }
-    }
-
-    public void CheckEnemyInRange()
-    {
-        DestroyMarkers();
-        foreach(var piece in Board.instance.pieces){
-            var p = piece.GetComponent<Piece>(); 
-            var sp = selectedPiece.GetComponent<CharacterStats>();
-            if(p != selectedPiece){
-                    if(Vector3.Distance(selectedPiece.transform.position, p.transform.position) < sp.attackRange){
-                        Debug.Log(piece.gameObject.GetComponent<CharacterStats>().attackRange);
-                        var cp = p.GetComponent<CharacterStats>();
-                        cp.TakeDamage(sp.attack);
-                        
-                    }
-                    
-            }
-            
+        if(selectedSkill != null){
+            SetTarget();
         }
-    
     }
 
-    private void NextInLine(){
-        //
+    public void DestroySkillButtons()
+    {
+        var buttons = FindObjectsOfType<SkillButton>();
 
+        foreach (var button in buttons)
+        {
+            Destroy(button.gameObject);
+        }
+    }
+    public void LoadCharacter()
+    {
+
+        DestroySkillButtons();
+        var thisChar = selectedPiece.GetComponent<CharacterStats>();
+        for (int i = 0; i < thisChar.avaiableSkills.Count; i++)
+        {
+            string skillName = thisChar.avaiableSkills[i];
+            var currentSkill = allSkills.Find(x => x.skillName == skillName);
+
+            var go = Instantiate(skillButtonObject, buttonTarget).GetComponent<SkillButton>();
+            go.thisText.text = currentSkill.skillName;
+            go.thisImage.sprite = currentSkill.skillIcon;
+            go.thisSkill = currentSkill;
+        }
+    }
+    private void NextInLine()
+    {
         SelectPiece(charStatQueue[charIndex].GetComponent<Piece>());
-
+        LoadCharacter();
     }
 
-    private void GetCharacterInitiative(){
-        
-        foreach(var charStat in Board.instance.pieces.OrderByDescending(x => x.gameObject.GetComponent<CharacterStats>().initiative))
+    private void GetCharacterInitiative()
+    {
+
+        foreach (var charStat in Board.instance.pieces.OrderByDescending(x => x.gameObject.GetComponent<CharacterStats>().initiative))
         {
 
             charStatQueue.Add(charStat.GetComponent<CharacterStats>());
         }
-        
+
     }
 
     public void ShowAvailableSpots()
@@ -88,53 +103,75 @@ public List<BaseSkill>allSkills = new List<BaseSkill>();
         DestroyMarkers();
         // TODO 
         // Ta bort distinctfulkoden
-        foreach (var availMov in availableMovements.Distinct())
+        if (!selectedPiece.hasMoved)
         {
-            int targetX = availMov.Item1;
-            int targetY = availMov.Item2;
+            foreach (var availMov in availableMovements.Distinct())
+            {
+                int targetX = availMov.Item1;
+                int targetY = availMov.Item2;
 
-            Vector3 newPosition = new Vector3(targetX * 2.5f, 0, targetY * 2.5f);
-            var marker = Instantiate(availableMarker, newPosition, Quaternion.identity).GetComponent<MarkerGrid>();
-            marker.x = targetX;
-            marker.y = targetY;
+                Vector3 newPosition = new Vector3(targetX * 2.5f, 0, targetY * 2.5f);
+                var marker = Instantiate(availableMarker, newPosition, Quaternion.identity).GetComponent<MarkerGrid>();
+                marker.x = targetX;
+                marker.y = targetY;
 
+            }
         }
+
     }
-    
+
     public void SelectPiece(Piece currentPiece)
     {
-      
-            selectedPiece = currentPiece;
-            //Changes color to selected
-            selectedPiece.thisRenderer.material = selectedPiece.selectedMaterial;
-         
-            positionX = selectedPiece.x;
-            positionY = selectedPiece.y;
 
-            Board.instance.GetLoc();
-            pieceLocations = Board.instance.pieceLocations;
+        selectedPiece = currentPiece;
+        //Changes color to selected
+        selectedPiece.thisRenderer.material = selectedPiece.selectedMaterial;
 
-            selectedPiece.Movement();
-            AvailableMovement(selectedPiece.gridX, selectedPiece.gridY, pieceLocations);
-            isSelected = true;
-   
+        positionX = selectedPiece.x;
+        positionY = selectedPiece.y;
+
+        Board.instance.GetLoc();
+        pieceLocations = Board.instance.pieceLocations;
+
+        selectedPiece.Movement();
+        AvailableMovement(selectedPiece.gridX, selectedPiece.gridY, pieceLocations);
+        isSelected = true;
+
+    }
+
+    public void MousePointer()
+    {
+
+        ray = _main.ScreenPointToRay(Input.mousePosition);
+
+    }
+    public void SetTarget()
+    {
+
+        MousePointer();
+        if (Physics.Raycast(ray, out hit) && Input.GetKeyUp(KeyCode.Mouse0))
+        {
+            var target = hit.collider.gameObject.GetComponent<Piece>();
+            if (target != null)
+            {
+                targetedPiece = target;
+                Debug.Log(targetedPiece);
+            }
+        }
+
     }
 
     public void MovePiece()
     {
-        RaycastHit hit;
-        Ray ray = _main.ScreenPointToRay(Input.mousePosition);
-
-
-        if (Physics.Raycast(ray, out hit) && Input.GetKeyDown(KeyCode.Mouse0) && isSelected)
+        MousePointer();
+        if (Physics.Raycast(ray, out hit) && Input.GetKeyUp(KeyCode.Mouse0) && isSelected)
         {
-
             var target = hit.collider.gameObject.GetComponent<MarkerGrid>();
             if (target != null)
             {
                 selectedPiece.transform.position = new Vector3(calcPos(target.x), 0, calcPos(target.y));
                 selectedPiece.x = target.x;
-                selectedPiece.y = target.y;              
+                selectedPiece.y = target.y;
                 selectedPiece.hasMoved = true;
                 isSelected = false;
                 whitePlayer = !whitePlayer;
@@ -143,7 +180,7 @@ public List<BaseSkill>allSkills = new List<BaseSkill>();
         }
     }
     public void DestroyMarkers()
-    {       
+    {
         var markers = FindObjectsOfType<DestroyMarker>();
 
         foreach (var marker in markers)
@@ -181,28 +218,6 @@ public List<BaseSkill>allSkills = new List<BaseSkill>();
         }
     }
 
-    public bool CanPawnAttack()
-    {
-        return true;
-    }
-
-    public void DestroyEnemy()
-    {
-        foreach (var piece in pieceLocations)
-        {
-            var jude = FindObjectsOfType<Piece>().ToList();
-            var cp = jude.Where(x => x.x == selectedPiece.x && x.y == selectedPiece.y && x.white != whitePlayer).FirstOrDefault();
-            if(cp != null)
-            {
-             
-                cp.gameObject.SetActive(false);
-            }
-            
-        }
-        // var enemy = pieceLocations.Where(piece => piece.x == positionX && piece.y == positionY && piece.white != whitePlayer).FirstOrDefault();
-
-    }
-
     public bool InBounds(int move, int position)
     {
         if (move + position >= 0 && move + position <= 17)
@@ -214,14 +229,14 @@ public List<BaseSkill>allSkills = new List<BaseSkill>();
     public void EndTurn()
     {
         //Changes color to normal
+        selectedPiece.hasMoved = false;
         selectedPiece.thisRenderer.material = selectedPiece.normalMaterial;
         availableMovements.Clear();
         charIndex++;
-        if(charIndex == charStatQueue.Count){
-               charIndex = 0;
+        if (charIndex == charStatQueue.Count)
+        {
+            charIndex = 0;
         }
-
-        
         DestroyMarkers();
         NextInLine();
     }
